@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+
+<title>Image to URL</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    width:100%;
+    min-height:100%;
+    overflow-x:hidden;
+    overflow-y:auto;
+}
+
+body{
+    width:100%;
+    min-height:100vh;
+    overflow-x:hidden;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-y;
+    background:linear-gradient(
+        135deg,
+        #667eea 0%,
+        #764ba2 25%,
+        #f093fb 50%,
+        #4facfe 75%,
+        #00f2fe 100%
+    );
+    background-size:400% 400%;
+    animation:gradientShift 15s ease infinite;
+    display:block;
+    padding:1.5rem;
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+}
+
+@keyframes gradientShift{
+    0%{background-position:0 50%}
+    50%{background-position:100% 50%}
+    100%{background-position:0 50%}
+}
+
+.container{
+    max-width:600px;
+    width:100%;
+    min-height:0;
+    margin:auto;
+}
+
+.card{
+    background:rgba(255,255,255,.95);
+    border-radius:40px;
+    padding:3rem;
+    box-shadow:
+        0 20px 60px rgba(0,0,0,.2),
+        0 0 0 1px rgba(255,255,255,.5) inset;
+    animation:slideIn .6s cubic-bezier(.34,1.56,.64,1);
+}
+
+@keyframes slideIn{
+    from{
+        opacity:0;
+        transform:translateY(30px) rotateX(-10deg);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0) rotateX(0);
+    }
+}
+
+/* HEADER */
+
+.header{
+    text-align:center;
+    margin-bottom:2.5rem;
+}
+
+.logo-emoji{
+    font-size:3.5rem;
+    display:block;
+    margin-bottom:1rem;
+    animation:bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-15px)}
+}
+
+.title{
+    font-size:2.4rem;
+    font-weight:900;
+    background:linear-gradient(135deg,#667eea,#764ba2,#f093fb);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+    margin-bottom:.5rem;
+    letter-spacing:-1px;
+}
+
+.subtitle{
+    font-size:1rem;
+    color:#666;
+    font-weight:500;
+}
+
+/* VERIFICATION */
+
+.verification-panel{
+    background:linear-gradient(135deg,#ffecd2 0%,#fcb69f 100%);
+    border-radius:30px;
+    padding:2rem;
+    margin-bottom:2rem;
+    animation:slideIn .6s ease-out .1s both;
+}
+
+.verification-panel.failed{
+    background:linear-gradient(135deg,#ff6b6b 0%,#ee5a24 100%);
+}
+
+.verification-panel.failed .verification-title{
+    color:#fff;
+}
+
+.verification-panel.failed .verification-timer{
+    color:#fff;
+    background:rgba(255,255,255,.3);
+}
+
+.verification-panel.failed .verification-status{
+    color:#fff;
+}
+
+.verification-panel.success{
+    background:linear-gradient(135deg,#00b894 0%,#00cec9 100%);
+}
+
+.verification-panel.success .verification-title{
+    color:#fff;
+}
+
+.verification-panel.success .verification-timer{
+    color:#fff;
+    background:rgba(255,255,255,.3);
+}
+
+.verification-panel.success .verification-status{
+    color:#fff;
+}
+
+.verification-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:1.5rem;
+    gap:1rem;
+}
+
+.verification-title{
+    font-size:1.1rem;
+    font-weight:700;
+    color:#6b4423;
+    display:flex;
+    align-items:center;
+    gap:.7rem;
+}
+
+.verification-timer{
+    font-size:2rem;
+    font-weight:900;
+    color:#ff6b6b;
+    background:rgba(255,255,255,.6);
+    padding:.5rem 1.2rem;
+    border-radius:20px;
+    min-width:fit-content;
+    animation:pulse-timer 1s ease-in-out infinite;
+}
+
+@keyframes pulse-timer{
+    0%,100%{transform:scale(1)}
+    50%{transform:scale(1.05)}
+}
+
+.progress-bar{
+    width:100%;
+    height:12px;
+    background:rgba(255,255,255,.5);
+    border-radius:20px;
+    overflow:hidden;
+    margin-bottom:1.5rem;
+    box-shadow:inset 0 2px 4px rgba(0,0,0,.1);
+}
+
+.progress-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#ff6b6b,#ffa94d);
+    border-radius:20px;
+    box-shadow:0 0 10px rgba(255,107,107,.4);
+    transition:width .3s ease;
+}
+
+.verification-status{
+    display:flex;
+    align-items:center;
+    gap:.8rem;
+    font-size:.95rem;
+    color:#6b4423;
+    font-weight:600;
+}
+
+.status-spinner{
+    width:16px;
+    height:16px;
+    border:3px solid rgba(255,107,107,.3);
+    border-top-color:#ff6b6b;
+    border-radius:50%;
+    animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+    to{transform:rotate(360deg)}
+}
+
+.verification-panel.hidden{
+    display:none;
+}
+
+/* MAIN CONTENT */
+
+.content{
+    display:none;
+    animation:slideIn .6s ease-out;
+}
+
+.content.visible{
+    display:block;
+}
+
+/* UPLOAD */
+
+.upload-zone{
+    background:linear-gradient(135deg,#667eea15,#764ba215);
+    border:3px dashed #667eea;
+    border-radius:30px;
+    padding:3.5rem 2rem;
+    text-align:center;
+    cursor:pointer;
+    transition:all .3s cubic-bezier(.34,1.56,.64,1);
+    margin-bottom:2rem;
+    position:relative;
+    overflow:hidden;
+}
+
+.upload-zone:hover,
+.upload-zone.dragover{
+    border-color:#764ba2;
+    transform:scale(1.02);
+    background:linear-gradient(135deg,#667eea25,#764ba225);
+    box-shadow:0 15px 40px rgba(118,75,162,.2);
+}
+
+.upload-icon{
+    font-size:4rem;
+    display:block;
+    margin-bottom:1rem;
+    animation:wobble 2s ease-in-out infinite;
+}
+
+@keyframes wobble{
+    0%,100%{transform:rotate(0)}
+    25%{transform:rotate(-5deg)}
+    75%{transform:rotate(5deg)}
+}
+
+.upload-text{
+    font-size:1.3rem;
+    font-weight:700;
+    color:#333;
+    margin-bottom:.5rem;
+}
+
+.upload-hint{
+    font-size:.95rem;
+    color:#999;
+    font-weight:500;
+}
+
+.upload-zone input{
+    display:none;
+}
+
+/* PREVIEW */
+
+.preview{
+    background:linear-gradient(135deg,#f5f7fa,#e9ecef);
+    border-radius:30px;
+    padding:2rem;
+    margin-bottom:2rem;
+    display:none;
+    animation:slideIn .4s ease-out;
+}
+
+.preview.visible{
+    display:block;
+}
+
+.preview-image{
+    width:100%;
+    max-height:300px;
+    border-radius:20px;
+    margin-bottom:1.5rem;
+    object-fit:contain;
+    box-shadow:0 10px 30px rgba(0,0,0,.1);
+    background:white;
+    padding:.5rem;
+    display:block;
+}
+
+/* URL SECTION */
+
+.url-section{
+    width:100%;
+    margin-bottom:1rem;
+}
+
+.url-label{
+    font-size:.85rem;
+    font-weight:700;
+    color:#667eea;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    margin-bottom:.8rem;
+    display:block;
+}
+
+/* URL BOX */
+
+.url-box{
+    width:100%;
+    display:flex;
+    align-items:stretch;
+    gap:.7rem;
+}
+
+/* URL INPUT */
+
+.url-input{
+    flex:1;
+    width:100%;
+    min-width:0;
+    height:54px;
+    background:#fff;
+    border:2px solid #667eea;
+    border-radius:16px;
+    padding:.85rem 1rem;
+    font-size:.85rem;
+    font-family:monospace;
+    color:#333;
+    outline:none;
+    letter-spacing:.3px;
+    line-height:1.4;
+    box-shadow:0 4px 12px rgba(102,126,234,.1);
+    transition:all .3s ease;
+    overflow-x:auto;
+    overflow-y:hidden;
+    white-space:nowrap;
+}
+
+.url-input:focus{
+    border-color:#764ba2;
+    box-shadow:0 6px 20px rgba(102,126,234,.2);
+}
+
+/* BUTTONS */
+
+.btn{
+    padding:1rem 2rem;
+    border:none;
+    border-radius:20px;
+    font-weight:700;
+    font-size:1rem;
+    cursor:pointer;
+    transition:all .3s cubic-bezier(.34,1.56,.64,1);
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 5px 15px rgba(0,0,0,.1);
+}
+
+.btn-primary{
+    width:100%;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    color:white;
+    margin-bottom:1rem;
+}
+
+.btn-primary:disabled{
+    opacity:.6;
+    cursor:not-allowed;
+}
+
+/* COPY BUTTON */
+
+.btn-secondary{
+    flex:0 0 110px;
+    height:54px;
+    min-width:110px;
+    padding:0 1rem;
+    border:none;
+    border-radius:16px;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    color:#fff;
+    font-size:.85rem;
+    font-weight:700;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:.4rem;
+    white-space:nowrap;
+    box-shadow:0 4px 12px rgba(102,126,234,.2);
+    transition:all .3s ease;
+}
+
+.btn-secondary:hover{
+    background:linear-gradient(135deg,#764ba2,#667eea);
+    transform:translateY(-2px);
+    box-shadow:0 6px 20px rgba(102,126,234,.3);
+}
+
+.btn-secondary:active{
+    transform:scale(.97);
+}
+
+/* UPLOAD PROGRESS */
+
+.upload-progress{
+    display:none;
+    margin-bottom:1.5rem;
+}
+
+.upload-progress.visible{
+    display:block;
+}
+
+.upload-progress-bar{
+    width:100%;
+    height:12px;
+    background:rgba(0,0,0,.1);
+    border-radius:20px;
+    overflow:hidden;
+    margin-bottom:.8rem;
+}
+
+.upload-progress-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#667eea,#764ba2,#f093fb);
+    border-radius:20px;
+    transition:width .3s ease;
+}
+
+.upload-progress-text{
+    font-size:.85rem;
+    color:#667eea;
+    font-weight:700;
+    text-align:right;
+}
+
+/* ERROR */
+
+.error-box{
+    background:linear-gradient(135deg,#ffe5e5,#ffd9d9);
+    border:2px solid #ff6b6b;
+    border-radius:20px;
+    padding:1.2rem;
+    margin-bottom:1.5rem;
+    display:none;
+    align-items:center;
+    gap:.8rem;
+}
+
+.error-box.visible{
+    display:flex;
+}
+
+.error-icon{
+    font-size:1.5rem;
+}
+
+.error-message{
+    color:#d9534f;
+    font-weight:600;
+    font-size:.95rem;
+}
+
+/* FOOTER */
+
+.footer{
+    text-align:center;
+    margin-top:2rem;
+    padding-top:2rem;
+    border-top:2px solid #f0f0f0;
+}
+
+.footer-link{
+    display:inline-block;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    color:white;
+    text-decoration:none;
+    padding:.9rem 2.5rem;
+    border-radius:25px;
+    font-weight:700;
+    font-size:.95rem;
+    box-shadow:0 5px 15px rgba(102,126,234,.2);
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+.retry-btn{
+    background:linear-gradient(135deg,#fd79a8,#e17055);
+    color:white;
+    border:none;
+    padding:.8rem 2rem;
+    border-radius:25px;
+    font-weight:700;
+    font-size:1rem;
+    cursor:pointer;
+    margin-top:1rem;
+    transition:all .3s ease;
+}
+
+.retry-btn:hover{
+    transform:scale(1.05);
+}
+
+/* TOAST */
+
+.toast-container{
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    pointer-events:none;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:2rem 1rem;
+    z-index:9999;
+}
+
+.toast{
+    background:linear-gradient(135deg,#00b894 0%,#00cec9 100%);
+    color:white;
+    padding:1.2rem 2rem;
+    border-radius:20px;
+    box-shadow:0 10px 30px rgba(0,184,148,.3);
+    display:flex;
+    align-items:center;
+    gap:1rem;
+    animation:slideDownIn .4s cubic-bezier(.34,1.56,.64,1);
+    pointer-events:all;
+    max-width:90%;
+    word-break:break-word;
+}
+
+@keyframes slideDownIn{
+    from{
+        opacity:0;
+        transform:translateY(-30px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+@keyframes slideUpOut{
+    from{
+        opacity:1;
+        transform:translateY(0);
+    }
+    to{
+        opacity:0;
+        transform:translateY(-30px);
+    }
+}
+
+.toast.out{
+    animation:slideUpOut .4s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+
+.toast-icon{
+    font-size:1.5rem;
+    flex-shrink:0;
+}
+
+.toast-text{
+    font-weight:600;
+    font-size:1rem;
+}
+
+/* MOBILE */
+
+@media(max-width:640px){
+
+    body{
+        display:block;
+        padding:1rem;
+    }
+
+    .container{
+        margin:0 auto;
+    }
+
+    .card{
+        padding:1.8rem;
+        border-radius:30px;
+    }
+
+    .title{
+        font-size:1.8rem;
+    }
+
+    .logo-emoji{
+        font-size:2.8rem;
+    }
+
+    .upload-zone{
+        padding:2.5rem 1.5rem;
+    }
+
+    .upload-icon{
+        font-size:3rem;
+    }
+
+    .btn{
+        padding:.85rem 1.5rem;
+        font-size:.9rem;
+    }
+
+    .verification-panel{
+        padding:1.5rem;
+    }
+
+    .preview{
+        padding:1.5rem;
+    }
+
+    /* MOBILE URL + COPY */
+
+    .url-box{
+        flex-direction:column;
+        gap:.7rem;
+    }
+
+    .url-input{
+        width:100%;
+        height:52px;
+        font-size:.8rem;
+        border-radius:15px;
+    }
+
+    .btn-secondary{
+        width:100%;
+        height:50px;
+        min-width:100%;
+        flex:none;
+        border-radius:15px;
+        font-size:.85rem;
+    }
+
+    .toast{
+        padding:1rem 1.5rem;
+        border-radius:15px;
+    }
+
+    .toast-text{
+        font-size:.9rem;
+    }
+}
+
+/* REDUCED MOTION */
+
+@media(prefers-reduced-motion:reduce){
+    *{
+        animation-duration:.01ms!important;
+        animation-iteration-count:1!important;
+        transition-duration:.01ms!important;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<!-- HEADER -->
+
+<div class="header">
+    <span class="logo-emoji">🚀</span>
+    <h1 class="title">Image to URL</h1>
+    <p class="subtitle">Upload and share in seconds</p>
+</div>
+
+<!-- VERIFICATION -->
+
+<div id="verificationPanel" class="verification-panel">
+
+    <div class="verification-header">
+
+        <div class="verification-title">
+            <span id="verificationIcon">🔒</span>
+            <span id="verificationTitleText">Verifying</span>
+        </div>
+
+        <div class="verification-timer" id="timerDisplay">
+            6
+        </div>
+
+    </div>
+
+    <div class="progress-bar">
+        <div id="progressFill" class="progress-fill"></div>
+    </div>
+
+    <div class="verification-status">
+        <span id="statusMessage">Checking access…</span>
+        <span id="spinner" class="status-spinner"></span>
+    </div>
+
+    <div id="retryContainer" style="display:none;text-align:center;margin-top:1rem"></div>
+
+</div>
+
+<!-- MAIN CONTENT -->
+
+<div id="mainContent" class="content">
+
+    <!-- UPLOAD AREA -->
+
+    <div id="uploadZone" class="upload-zone">
+
+        <span class="upload-icon">📸</span>
+
+        <h2 class="upload-text">
+            Drop your photo here
+        </h2>
+
+        <p class="upload-hint">
+            Click to browse or drag & drop
+        </p>
+
+        <input
+            type="file"
+            id="fileInput"
+            accept="image/*"
+        >
+
+    </div>
+
+    <!-- PREVIEW -->
+
+    <div id="previewSection" class="preview">
+
+        <img
+            id="previewImage"
+            class="preview-image"
+            src=""
+            alt="Preview"
+        >
+
+        <!-- URL SECTION -->
+
+        <div class="url-section">
+
+            <label class="url-label">
+                📎 Image Link
+            </label>
+
+            <div class="url-box">
+
+                <input
+                    id="urlInput"
+                    class="url-input"
+                    type="text"
+                    readonly
+                    placeholder="Your link appears here"
+                >
+
+                <button
+                    id="copyBtn"
+                    class="btn btn-secondary"
+                    type="button"
+                >
+                    📋 Copy
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- UPLOAD PROGRESS -->
+
+    <div id="uploadProgress" class="upload-progress">
+
+        <div class="upload-progress-bar">
+            <div
+                id="uploadProgressFill"
+                class="upload-progress-fill"
+            ></div>
+        </div>
+
+        <div
+            class="upload-progress-text"
+            id="uploadProgressText"
+        >
+            0% uploaded
+        </div>
+
+    </div>
+
+    <!-- ERROR -->
+
+    <div id="errorBox" class="error-box">
+
+        <span class="error-icon">⚠️</span>
+
+        <span
+            class="error-message"
+            id="errorMessage"
+        ></span>
+
+    </div>
+
+    <!-- UPLOAD BUTTON -->
+
+    <button
+        id="uploadBtn"
+        class="btn btn-primary"
+        disabled
+        type="button"
+    >
+        🚀 Upload Now
+    </button>
+
+    <!-- FOOTER -->
+
+    <div class="footer">
+
+        <a
+            href="#"
+            id="contactOwner"
+            class="footer-link"
+        >
+            💬 Get Help
+        </a>
+
+    </div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- TOAST -->
+
+<div id="toastContainer" class="toast-container"></div>
+
+<script>
+
+(function(){
+
+'use strict';
+
+/* =========================
+   CONFIGURATION
+========================= */
+
+const IMGBB_API_KEY =
+'80b35ac82efc65cbb40e66c3f916ef88';
+
+const COUNTDOWN_SECONDS = 6;
+
+const CONTACT_URL =
+'https://t.me/animefreeking';
+
+
+/* =========================
+   ELEMENTS
+========================= */
+
+const verificationPanel =
+document.getElementById('verificationPanel');
+
+const mainContent =
+document.getElementById('mainContent');
+
+const progressFill =
+document.getElementById('progressFill');
+
+const timerDisplay =
+document.getElementById('timerDisplay');
+
+const statusMessage =
+document.getElementById('statusMessage');
+
+const spinner =
+document.getElementById('spinner');
+
+const verificationIcon =
+document.getElementById('verificationIcon');
+
+const verificationTitleText =
+document.getElementById('verificationTitleText');
+
+const retryContainer =
+document.getElementById('retryContainer');
+
+const fileInput =
+document.getElementById('fileInput');
+
+const uploadZone =
+document.getElementById('uploadZone');
+
+const previewSection =
+document.getElementById('previewSection');
+
+const previewImage =
+document.getElementById('previewImage');
+
+const urlInput =
+document.getElementById('urlInput');
+
+const copyBtn =
+document.getElementById('copyBtn');
+
+const uploadBtn =
+document.getElementById('uploadBtn');
+
+const contactBtn =
+document.getElementById('contactOwner');
+
+const errorBox =
+document.getElementById('errorBox');
+
+const errorMessage =
+document.getElementById('errorMessage');
+
+const uploadProgress =
+document.getElementById('uploadProgress');
+
+const uploadProgressFill =
+document.getElementById('uploadProgressFill');
+
+const uploadProgressText =
+document.getElementById('uploadProgressText');
+
+const toastContainer =
+document.getElementById('toastContainer');
+
+
+/* =========================
+   VARIABLES
+========================= */
+
+let countdown = COUNTDOWN_SECONDS;
+
+let timerInterval = null;
+
+let verificationComplete = false;
+
+let currentFile = null;
+
+let uploadInProgress = false;
+
+let verificationSuccess = false;
+
+
+/* =========================
+   TOAST
+========================= */
+
+function showToast(
+    message,
+    icon = '✅',
+    duration = 2000
+){
+
+    const toast =
+    document.createElement('div');
+
+    toast.className = 'toast';
+
+    toast.innerHTML =
+    `<span class="toast-icon">${icon}</span>
+     <span class="toast-text">${message}</span>`;
+
+    toastContainer.appendChild(toast);
+
+    setTimeout(function(){
+
+        toast.classList.add('out');
+
+        setTimeout(function(){
+            toast.remove();
+        },400);
+
+    },duration);
+
+}
+
+
+/* =========================
+   ERROR
+========================= */
+
+function showError(msg){
+
+    errorMessage.textContent = msg;
+
+    errorBox.classList.add('visible');
+
+}
+
+function hideError(){
+
+    errorBox.classList.remove('visible');
+
+}
+
+
+/* =========================
+   VERIFICATION FINISH
+========================= */
+
+function finishVerification(success){
+
+    clearInterval(timerInterval);
+
+    timerInterval = null;
+
+    verificationComplete = true;
+
+    verificationSuccess = success;
+
+    spinner.style.display = 'none';
+
+    progressFill.style.width = '100%';
+
+    timerDisplay.textContent = '0';
+
+
+    if(success){
+
+        verificationPanel.classList.remove('failed');
+
+        verificationPanel.classList.add('success');
+
+        verificationIcon.textContent = '✅';
+
+        verificationTitleText.textContent =
+        'Verified!';
+
+        statusMessage.textContent =
+        '✅ Access granted! Ready to upload';
+
+        setTimeout(function(){
+
+            verificationPanel.classList.add('hidden');
+
+            mainContent.classList.add('visible');
+
+        },800);
+
+    }else{
+
+        verificationPanel.classList.remove('success');
+
+        verificationPanel.classList.add('failed');
+
+        verificationIcon.textContent = '❌';
+
+        verificationTitleText.textContent =
+        'Verification Failed';
+
+        statusMessage.textContent =
+        '⚠️ Access denied. Please try again';
+
+        retryContainer.style.display = 'block';
+
+        retryContainer.innerHTML =
+        '<button class="retry-btn" id="retryBtn">🔄 Retry Verification</button>';
+
+        document
+        .getElementById('retryBtn')
+        .addEventListener('click',function(){
+
+            retryContainer.style.display = 'none';
+
+            verificationPanel.classList.remove(
+                'failed',
+                'success'
+            );
+
+            verificationIcon.textContent = '🔒';
+
+            verificationTitleText.textContent =
+            'Verifying';
+
+            startVerification();
+
+        });
+
+    }
+
+}
+
+
+/* =========================
+   START VERIFICATION
+========================= */
+
+function startVerification(){
+
+    clearInterval(timerInterval);
+
+    verificationComplete = false;
+
+    retryContainer.style.display = 'none';
+
+    verificationPanel.classList.remove(
+        'failed',
+        'success'
+    );
+
+    verificationIcon.textContent = '🔒';
+
+    verificationTitleText.textContent =
+    'Verifying';
+
+    countdown = COUNTDOWN_SECONDS;
+
+    timerDisplay.textContent = countdown;
+
+    progressFill.style.width = '0%';
+
+    statusMessage.textContent =
+    'Checking access…';
+
+    spinner.style.display = 'inline-block';
+
+
+    timerInterval =
+    setInterval(function(){
+
+        countdown--;
+
+        progressFill.style.width =
+        (
+            (COUNTDOWN_SECONDS - countdown)
+            /
+            COUNTDOWN_SECONDS
+            *
+            100
+        ) + '%';
+
+        timerDisplay.textContent =
+        Math.max(0,countdown);
+
+
+        if(countdown <= 0){
+
+            const isSuccess =
+            Math.random() < 0.9;
+
+            finishVerification(isSuccess);
+
+        }
+
+    },1000);
+
+}
+
+
+/* =========================
+   FILE SELECT
+========================= */
+
+function handleFileSelect(file){
+
+    if(!file){
+        return;
+    }
+
+    if(!file.type.startsWith('image/')){
+
+        showError(
+            'Please select a valid image file'
+        );
+
+        return;
+    }
+
+    hideError();
+
+    currentFile = file;
+
+    const reader =
+    new FileReader();
+
+    reader.onload = function(e){
+
+        previewImage.src =
+        e.target.result;
+
+        previewSection.classList.add(
+            'visible'
+        );
+
+        urlInput.value = '';
+
+        uploadBtn.disabled = false;
+
+        uploadBtn.textContent =
+        '🚀 Upload Now';
+
+    };
+
+    reader.onerror = function(){
+
+        showError(
+            'Failed to read image file'
+        );
+
+    };
+
+    reader.readAsDataURL(file);
+
+}
+
+
+/* =========================
+   UPLOAD TO IMGBB
+========================= */
+
+function uploadToImgBB(file){
+
+    if(!file || uploadInProgress){
+        return;
+    }
+
+    uploadInProgress = true;
+
+    uploadBtn.disabled = true;
+
+    uploadBtn.textContent =
+    '⏳ Uploading…';
+
+    hideError();
+
+    uploadProgress.classList.add(
+        'visible'
+    );
+
+    uploadProgressFill.style.width =
+    '0%';
+
+    uploadProgressText.textContent =
+    '0% uploaded';
+
+
+    const formData =
+    new FormData();
+
+    formData.append(
+        'image',
+        file
+    );
+
+    formData.append(
+        'key',
+        IMGBB_API_KEY
+    );
+
+
+    const xhr =
+    new XMLHttpRequest();
+
+    xhr.open(
+        'POST',
+        'https://api.imgbb.com/1/upload',
+        true
+    );
+
+
+    xhr.upload.onprogress =
+    function(e){
+
+        if(e.lengthComputable){
+
+            const p =
+            Math.round(
+                e.loaded /
+                e.total *
+                100
+            );
+
+            uploadProgressFill.style.width =
+            p + '%';
+
+            uploadProgressText.textContent =
+            p + '% uploaded';
+
+        }
+
+    };
+
+
+    xhr.onload =
+    function(){
+
+        uploadInProgress = false;
+
+
+        if(
+            xhr.status >= 200 &&
+            xhr.status < 300
+        ){
+
+            try{
+
+                const data =
+                JSON.parse(
+                    xhr.responseText
+                );
+
+
+                if(
+                    data.success &&
+                    data.data &&
+                    data.data.url
+                ){
+
+                    urlInput.value =
+                    data.data.url;
+
+                    uploadBtn.textContent =
+                    '✅ Done! Uploaded';
+
+                    uploadProgressFill.style.width =
+                    '100%';
+
+                    uploadProgressText.textContent =
+                    '100% uploaded';
+
+                    uploadBtn.disabled =
+                    false;
+
+                    showToast(
+                        '📤 Upload successful!',
+                        '✅',
+                        2000
+                    );
+
+                }else{
+
+                    throw new Error(
+                        data.error?.message ||
+                        'Upload failed'
+                    );
+
+                }
+
+            }catch(e){
+
+                showError(
+                    e.message ||
+                    'Invalid response from server'
+                );
+
+                uploadBtn.textContent =
+                '🔄 Try Again';
+
+                uploadBtn.disabled =
+                false;
+
+            }
+
+        }else{
+
+            showError(
+                'Upload failed (HTTP ' +
+                xhr.status +
+                ')'
+            );
+
+            uploadBtn.textContent =
+            '🔄 Try Again';
+
+            uploadBtn.disabled =
+            false;
+
+        }
+
+    };
+
+
+    xhr.onerror =
+    function(){
+
+        uploadInProgress = false;
+
+        showError(
+            'Network error. Check your connection'
+        );
+
+        uploadBtn.textContent =
+        '🔄 Try Again';
+
+        uploadBtn.disabled =
+        false;
+
+    };
+
+
+    xhr.send(formData);
+
+}
+
+
+/* =========================
+   COPY URL
+========================= */
+
+function copyUrl(){
+
+    const url =
+    urlInput.value.trim();
+
+
+    if(
+        !url ||
+        !url.startsWith('http')
+    ){
+
+        showError(
+            'No valid URL to copy'
+        );
+
+        return;
+
+    }
+
+
+    const done =
+    function(){
+
+        showToast(
+            'Link copied successfully!',
+            '📋',
+            2500
+        );
+
+        copyBtn.textContent =
+        '✅ Copied';
+
+        setTimeout(function(){
+
+            copyBtn.textContent =
+            '📋 Copy';
+
+        },1500);
+
+    };
+
+
+    if(
+        navigator.clipboard &&
+        navigator.clipboard.writeText
+    ){
+
+        navigator.clipboard
+        .writeText(url)
+        .then(done)
+        .catch(function(){
+
+            fallbackCopy(url);
+
+        });
+
+    }else{
+
+        fallbackCopy(url);
+
+    }
+
+}
+
+
+/* =========================
+   FALLBACK COPY
+========================= */
+
+function fallbackCopy(text){
+
+    const t =
+    document.createElement('textarea');
+
+    t.value = text;
+
+    t.style.position = 'fixed';
+
+    t.style.opacity = '0';
+
+    document.body.appendChild(t);
+
+    t.select();
+
+
+    try{
+
+        document.execCommand('copy');
+
+        showToast(
+            'Link copied successfully!',
+            '📋',
+            2500
+        );
+
+        copyBtn.textContent =
+        '✅ Copied';
+
+        setTimeout(function(){
+
+            copyBtn.textContent =
+            '📋 Copy';
+
+        },1500);
+
+    }catch(e){
+
+        showError(
+            'Could not copy URL'
+        );
+
+    }
+
+
+    document.body.removeChild(t);
+
+}
+
+
+/* =========================
+   DRAG & DROP
+========================= */
+
+uploadZone.addEventListener(
+    'dragover',
+    function(e){
+
+        e.preventDefault();
+
+        uploadZone.classList.add(
+            'dragover'
+        );
+
+    }
+);
+
+
+uploadZone.addEventListener(
+    'dragleave',
+    function(){
+
+        uploadZone.classList.remove(
+            'dragover'
+        );
+
+    }
+);
+
+
+uploadZone.addEventListener(
+    'drop',
+    function(e){
+
+        e.preventDefault();
+
+        uploadZone.classList.remove(
+            'dragover'
+        );
+
+
+        if(
+            e.dataTransfer.files.length
+        ){
+
+            handleFileSelect(
+                e.dataTransfer.files[0]
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================
+   FILE INPUT
+========================= */
+
+uploadZone.addEventListener(
+    'click',
+    function(){
+
+        fileInput.click();
+
+    }
+);
+
+
+fileInput.addEventListener(
+    'change',
+    function(e){
+
+        if(e.target.files.length){
+
+            handleFileSelect(
+                e.target.files[0]
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================
+   UPLOAD BUTTON
+========================= */
+
+uploadBtn.addEventListener(
+    'click',
+    function(){
+
+        if(
+            currentFile &&
+            !uploadInProgress
+        ){
+
+            uploadToImgBB(
+                currentFile
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================
+   COPY BUTTON
+========================= */
+
+copyBtn.addEventListener(
+    'click',
+    copyUrl
+);
+
+
+/* =========================
+   CONTACT
+========================= */
+
+contactBtn.addEventListener(
+    'click',
+    function(e){
+
+        e.preventDefault();
+
+        window.open(
+            CONTACT_URL,
+            '_blank'
+        );
+
+    }
+);
+
+
+/* =========================
+   START
+========================= */
+
+startVerification();
+
+})();
+
+</script>
+
+</body>
+</html>
